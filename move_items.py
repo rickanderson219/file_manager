@@ -35,6 +35,7 @@ def plan(src: Path) -> list:
     return moves
 
 def confirm_prompt(moves: list) -> bool:
+    """计算出所有移动关系，输出，确认是否要打印"""
     print(f"将移动 {len(moves)} 个文件：")
     for item, target, cat in moves:
         print(f"    {item.name} -> {cat} / {target.name}")
@@ -47,6 +48,7 @@ def confirm_prompt(moves: list) -> bool:
         print("请输入 y 或 n")
 
 def execute_move(moves: list) -> None:
+    """执行移动操作，并写入日志"""
     batch_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # 取时间
     for item, target, cat in moves:
         target.parent.mkdir(exist_ok=True)
@@ -54,7 +56,8 @@ def execute_move(moves: list) -> None:
         write_log(item, target, batch_ts)
         print(f"移动：{item.name} -> {cat}/{target.name}")
 
-def write_log(item: Path, target: Path, ts: str):
+def write_log(item: Path, target: Path, ts: str):   # 统一批次的时间是一样的
+    """写日志模块"""
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(f"{ts}\t{item.resolve()}\t{target.resolve()}\n")  # 记录移动的绝对路径
 
