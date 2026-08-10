@@ -17,20 +17,48 @@ def unique_target(dir: Path, file: Path) -> Path:
         n += 1
     return target
 
-def main(src: Path):
+def plan(src: Path) -> list:
+    """算出每个文件应该放到哪里，返回一个 [(源, 目标, 分类), ...] 的列表，但不进行实际文件操作"""
+    moves = []
     for item in src.iterdir():
         if not item.is_file():
             continue
-        
         suf = item.suffix.lower()
-        if suf not in CATEGORIES:  # 跳过未分类的扩展名
+        if suf not in CATEGORIES:
             continue
-            
         target_dir = src / CATEGORIES[suf]
-        target_dir.mkdir(exist_ok=True)
         target = unique_target(target_dir, item)
-        shutil.move(str(item), target)
-        print(f"移动：{item.name} -> {CATEGORIES[suf]}/{target.name}")
+        moves.append((item, target, CATEGORIES[suf]))
+    return moves
 
+def confirm_prompt(moves: list) -> bool:
+    print(f"将移动 {len(moves)} 个文件：")
+    for item, target, cat in moves:
+        print(f"    {item.name} -> {cat} / {target.name}")
+    while True:
+        ans = input("确认执行？(y/n): ").strip().lower()
+        if ans in ("y", "yes"):
+            return True
+        if ans in ("n", "no"):
+            return False
+        print("请输入 y 或 n")
+
+def execute_move(moves: list) -> None:
+    for item, target, cat in moves:
+        target.parent.mkdir(exist_ok=True)
+        shutil.move(item, target)
+        print(f"移动：{item.name} -> {cat}/{target.name}")
+
+def main(src: Path):
+    moves = plan(src)
+    if not moves:
+        print("没有需要整理的文件")
+        return
+    if not confirm_prompt(moves):
+        print("已取消：未移动任何文件")
+        return
+    execute_move(moves)
+    print(f"完成移动")
+    
 if __name__ == "__main__":
     main(Path("D:/test"))
