@@ -1,5 +1,8 @@
 from pathlib import Path
 import shutil
+from datetime import datetime
+
+LOG_FILE = Path(__file__).parent / "move_log.txt"
 
 # 扩展名和目标文件夹名的对应关系：
 CATEGORIES = {
@@ -44,10 +47,16 @@ def confirm_prompt(moves: list) -> bool:
         print("请输入 y 或 n")
 
 def execute_move(moves: list) -> None:
+    batch_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  # 取时间
     for item, target, cat in moves:
         target.parent.mkdir(exist_ok=True)
         shutil.move(item, target)
+        write_log(item, target, batch_ts)
         print(f"移动：{item.name} -> {cat}/{target.name}")
+
+def write_log(item: Path, target: Path, ts: str):
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"{ts}\t{item.resolve()}\t{target.resolve()}\n")  # 记录移动的绝对路径
 
 def main(src: Path):
     moves = plan(src)
