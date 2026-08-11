@@ -1,8 +1,9 @@
 from pathlib import Path
 import shutil
 from datetime import datetime
+import json
 
-LOG_FILE = Path(__file__).parent / "move_log.txt"
+LOG_FILE = Path(__file__).parent / "log.jsonl"
 
 # 扩展名和目标文件夹名的对应关系：
 CATEGORIES = {
@@ -56,12 +57,26 @@ def execute_move(moves: list) -> None:
         write_log(item, target, batch_ts)
         print(f"移动：{item.name} -> {cat}/{target.name}")
 
-def write_log(item: Path, target: Path, ts: str):   # 统一批次的时间是一样的
+def write_log_old(item: Path, target: Path, ts: str):   # 统一批次的时间是一样的
     """写日志模块"""
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(f"{ts}\t{item.resolve()}\t{target.resolve()}\n")  # 记录移动的绝对路径
 
+def write_log(item: Path, target: Path, ts: str):
+    """将操作写入一个 json 日志"""
+    record = {
+        "op": "move",                       # 操作类型：移动
+        "time": ts,                         # 批次时间戳
+        "src": str(item.resolve()),         # 原路径（转为字符串绝对路径）
+        "dst": str(target.resolve()),       # 目标路径
+    }
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
 def main(src: Path):
+    if not src.is_dir():
+        print(f"错误：目录不存在或不是文件夹：{src}")
+        return
     moves = plan(src)
     if not moves:
         print("没有需要整理的文件")
