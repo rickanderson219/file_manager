@@ -14,7 +14,7 @@ DEFAULT_CATEGORIES = {
 CONFIG_FILE = LOG_FILE.parent / "config.json"
 
 def load_categories() -> dict:
-    """读取 config.json 的分类规则：缺失时按默认值创建损坏时回退到内置默认值"""
+    """读取 config.json 的分类规则：缺失时按默认值创建，损坏时回退到内置默认值"""
     if not CONFIG_FILE.exists():
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump({"categories": DEFAULT_CATEGORIES}, f, 
@@ -55,7 +55,7 @@ def plan(src: Path) -> list:
     return moves
 
 def confirm_prompt(moves: list) -> bool:
-    """计算出所有移动关系，输出，确认是否要打印"""
+    """计算出所有移动关系，输出，确认是否要执行"""
     print(f"将移动 {len(moves)} 个文件：")
     for item, target, cat in moves:
         print(f"    {item.name} -> {cat} / {target.name}")
@@ -99,7 +99,7 @@ def main(src: Path):
         print("已取消：未移动任何文件")
         return
     execute_move(moves)
-    print(f"完成移动")
+    print("完成移动")
     
 if __name__ == "__main__":
     while True:
