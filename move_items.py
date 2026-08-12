@@ -2,16 +2,8 @@ from pathlib import Path
 import shutil
 from datetime import datetime
 import json
-
-LOG_FILE = Path(__file__).parent / "log.jsonl"
-
-# 扩展名和目标文件夹名的对应关系：
-DEFAULT_CATEGORIES = {
-    ".jpg": "图片", ".png": "图片",
-    ".txt": "文档", ".md": "文档", ".pdf": "文档", ".docx": "文档",
-    ".mp4": "视频", ".mkv": "视频",
-}
-CONFIG_FILE = LOG_FILE.parent / "config.json"
+from paths import LOG_FILE, CONFIG_FILE
+from categories import DEFAULT_CATEGORIES
 
 def load_categories() -> dict:
     """读取 config.json 的分类规则：缺失时按默认值创建，损坏时回退到内置默认值"""
@@ -55,7 +47,7 @@ def plan(src: Path) -> list:
     return moves
 
 def confirm_prompt(moves: list) -> bool:
-    """计算出所有移动关系，输出，确认是否要执行"""
+    """计算出所有移动关系，输出，确认是否执行"""
     print(f"将移动 {len(moves)} 个文件：")
     for item, target, cat in moves:
         print(f"    {item.name} -> {cat} / {target.name}")
