@@ -88,4 +88,13 @@ def main(src: Path):
     print(f"完成移动")
     
 if __name__ == "__main__":
-    main(Path("D:/test"))
+    while True:
+        raw = input("请输入要整理的文件夹路径（输入 q 退出）：").strip().strip('"').strip("'")
+        if raw.lower() in ("q", "quit", "exit"):
+            print("已退出")
+            break
+        src = Path(raw)
+        if src.is_dir():
+            main(src)
+            break
+        print(f"目录不存在或不是文件夹：{src}")
