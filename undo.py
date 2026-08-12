@@ -1,9 +1,7 @@
 from pathlib import Path
 import shutil
 import json
-
-LOG_FILE = Path(__file__).parent / "log.jsonl"   # 文件路径
-
+from paths import LOG_FILE
 
 def read_log() -> list:
     records = []
