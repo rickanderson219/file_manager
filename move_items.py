@@ -6,11 +6,30 @@ import json
 LOG_FILE = Path(__file__).parent / "log.jsonl"
 
 # 扩展名和目标文件夹名的对应关系：
-CATEGORIES = {
+DEFAULT_CATEGORIES = {
     ".jpg": "图片", ".png": "图片",
     ".txt": "文档", ".md": "文档", ".pdf": "文档", ".docx": "文档",
     ".mp4": "视频", ".mkv": "视频",
 }
+CONFIG_FILE = LOG_FILE.parent / "config.json"
+
+def load_categories() -> dict:
+    """读取 config.json 的分类规则：缺失时按默认值创建损坏时回退到内置默认值"""
+    if not CONFIG_FILE.exists():
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump({"categories": DEFAULT_CATEGORIES}, f, 
+                      ensure_ascii=False, indent=2)
+        print(f"未找到配置文件，已生成默认配置：{CONFIG_FILE}")
+        return DEFAULT_CATEGORIES
+    try:
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data["categories"]
+    except (json.JSONDecodeError, KeyError, OSError):
+        print("警告：配置文件损坏，使用默认分类")
+        return DEFAULT_CATEGORIES
+
+categories = load_categories()
 
 def unique_target(dir: Path, file: Path) -> Path:
     """找到不冲突的目标路径，冲突时自动加后缀序号 _1、_2..."""
@@ -28,11 +47,11 @@ def plan(src: Path) -> list:
         if not item.is_file():
             continue
         suf = item.suffix.lower()
-        if suf not in CATEGORIES:
+        if suf not in categories:
             continue
-        target_dir = src / CATEGORIES[suf]
+        target_dir = src / categories[suf]
         target = unique_target(target_dir, item)
-        moves.append((item, target, CATEGORIES[suf]))
+        moves.append((item, target, categories[suf]))
     return moves
 
 def confirm_prompt(moves: list) -> bool:
@@ -56,11 +75,6 @@ def execute_move(moves: list) -> None:
         shutil.move(item, target)
         write_log(item, target, batch_ts)
         print(f"移动：{item.name} -> {cat}/{target.name}")
-
-def write_log_old(item: Path, target: Path, ts: str):   # 统一批次的时间是一样的
-    """写日志模块"""
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(f"{ts}\t{item.resolve()}\t{target.resolve()}\n")  # 记录移动的绝对路径
 
 def write_log(item: Path, target: Path, ts: str):
     """将操作写入一个 json 日志"""
