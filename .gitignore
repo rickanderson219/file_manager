@@ -1,2 +1,4 @@
 log.jsonl
 config.json
+__pycache__/
+*.py[cod]
